@@ -1,0 +1,348 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Share+Tech+Mono&display=swap');
+
+@import "tailwindcss";
+
+
+@theme {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono: 'Share Tech Mono', monospace;
+
+  --color-critical: #ff2d55;
+  --color-serious: #ffb700;
+  --color-stable: #00f5a0;
+  --color-med-dark: #0a0f1e;
+  --color-med-blue: #00d2ff;
+  --color-med-bg: #050814;
+}
+
+html, body {
+  background-color: #050814;
+  color: #e2e8f0;
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(10, 15, 30, 0.5);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 210, 255, 0.2);
+  border-radius: 3px;
+  border: 1px solid rgba(0, 210, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 210, 255, 0.5);
+  box-shadow: 0 0 8px rgba(0, 210, 255, 0.5);
+}
+
+/* Background Grids */
+.medical-grid {
+  background-image: 
+    linear-gradient(rgba(0, 210, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 210, 255, 0.04) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.medical-grid-fine {
+  background-image: 
+    linear-gradient(rgba(0, 210, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 210, 255, 0.015) 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+
+.scanline {
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0),
+    rgba(0, 210, 255, 0.03) 50%,
+    rgba(255,255,255,0)
+  );
+  animation: scanline-anim 6s linear infinite;
+}
+
+@keyframes scanline-anim {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+/* CRT monitor curve & vignette */
+.crt-overlay {
+  pointer-events: none;
+  background: radial-gradient(circle, transparent 50%, rgba(5, 8, 20, 0.4) 100%);
+  z-index: 50;
+}
+
+/* Glassmorphism Cards */
+.glass-panel {
+  background: rgba(10, 15, 30, 0.7);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(0, 210, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 210, 255, 0.3);
+  box-shadow: 0 12px 40px rgba(0, 210, 255, 0.15), 0 0 1px rgba(0, 210, 255, 0.2) inset;
+}
+
+/* Glowing text & icons */
+.glow-text-cyan {
+  text-shadow: 0 0 8px rgba(0, 210, 255, 0.6);
+}
+
+.glow-text-critical {
+  text-shadow: 0 0 12px rgba(255, 45, 85, 0.8), 0 0 2px rgba(255, 45, 85, 0.5);
+}
+
+.glow-text-serious {
+  text-shadow: 0 0 12px rgba(255, 183, 0, 0.8), 0 0 2px rgba(255, 183, 0, 0.5);
+}
+
+.glow-text-stable {
+  text-shadow: 0 0 12px rgba(0, 245, 160, 0.8), 0 0 2px rgba(0, 245, 160, 0.5);
+}
+
+/* Shimmer & Sheen effects */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer-bg {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(0, 210, 255, 0.05) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 8s infinite linear;
+}
+
+/* Pulsing border animations */
+@keyframes pulse-border-red {
+  0%, 100% { border-color: rgba(255, 45, 85, 0.2); box-shadow: 0 0 10px rgba(255, 45, 85, 0.1); }
+  50% { border-color: rgba(255, 45, 85, 0.8); box-shadow: 0 0 25px rgba(255, 45, 85, 0.35), inset 0 0 8px rgba(255, 45, 85, 0.1); }
+}
+
+.pulse-critical {
+  animation: pulse-border-red 2s infinite ease-in-out;
+}
+
+@keyframes pulse-badge-red {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 45, 85, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(255, 45, 85, 0.8); }
+}
+
+@keyframes pulse-badge-amber {
+  0%, 100% { box-shadow: 0 0 6px rgba(255, 183, 0, 0.3); }
+  50% { box-shadow: 0 0 15px rgba(255, 183, 0, 0.6); }
+}
+
+@keyframes pulse-badge-green {
+  0%, 100% { box-shadow: 0 0 6px rgba(0, 245, 160, 0.2); }
+  50% { box-shadow: 0 0 12px rgba(0, 245, 160, 0.5); }
+}
+
+.badge-pulse-critical {
+  animation: pulse-badge-red 1s infinite ease-in-out;
+}
+
+.badge-pulse-serious {
+  animation: pulse-badge-amber 1.8s infinite ease-in-out;
+}
+
+.badge-pulse-stable {
+  animation: pulse-badge-green 3s infinite ease-in-out;
+}
+
+/* Form focus glows */
+.input-focus-glow:focus {
+  outline: none;
+  border-color: rgba(0, 210, 255, 0.7);
+  box-shadow: 0 0 15px rgba(0, 210, 255, 0.3), inset 0 0 2px rgba(0, 210, 255, 0.2);
+}
+
+/* 3D Stacking Layer effect for patient input cards */
+.layered-stack-card {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.layered-stack-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(0, 210, 255, 0.02);
+  transform: translateZ(-5px) scale(0.98);
+  border: 1px solid rgba(0, 210, 255, 0.05);
+  z-index: -1;
+  transition: all 0.3s ease;
+}
+
+.layered-stack-card:hover {
+  transform: translateY(-2px) translateZ(10px);
+  border-color: rgba(0, 210, 255, 0.25);
+}
+
+/* Continuous ECG heartbeat line animation */
+@keyframes ecg-dash {
+  to {
+    stroke-dashoffset: -120;
+  }
+}
+
+.animate-ecg {
+  stroke-dasharray: 20, 10;
+  stroke-dashoffset: 0;
+  animation: ecg-dash 3s linear infinite;
+}
+
+@keyframes ecg-sweep {
+  0% {
+    mask-position: -20% 0;
+  }
+  100% {
+    mask-position: 120% 0;
+  }
+}
+
+/* Staggered entry transitions */
+.patient-slide-in {
+  animation: slide-in-from-bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.patient-slide-out {
+  animation: slide-out-to-left 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.result-card-fly-in {
+  animation: fly-in-from-right 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slide-in-from-bottom {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes slide-out-to-left {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes fly-in-from-right {
+  0% {
+    opacity: 0;
+    transform: translateX(50px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Rotating cross */
+@keyframes rotate-medical-cross {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.rotate-cross {
+  animation: rotate-medical-cross 4s linear infinite;
+}
+
+/* Pulsing heart / triage button */
+@keyframes pulse-heart {
+  0% { transform: scale(1); }
+  25% { transform: scale(1.08); }
+  40% { transform: scale(1.02); }
+  55% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.animate-pulse-heart {
+  animation: pulse-heart 1.5s infinite cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+@keyframes pulse-glow-red-button {
+  0%, 100% { box-shadow: 0 0 15px rgba(255, 45, 85, 0.4), 0 0 2px rgba(255, 45, 85, 0.2); }
+  50% { box-shadow: 0 0 30px rgba(255, 45, 85, 0.8), 0 0 5px rgba(255, 45, 85, 0.4); }
+}
+
+.triage-button-pulse {
+  animation: pulse-glow-red-button 2s infinite ease-in-out;
+}
+
+.triage-button-pulse:hover {
+  animation: none;
+  box-shadow: 0 0 40px rgba(255, 45, 85, 1), 0 0 10px rgba(255, 45, 85, 0.6);
+  transform: scale(1.02);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ECG Flatline */
+@keyframes flatline-pulse {
+  0%, 100% { opacity: 0.3; filter: drop-shadow(0 0 1px rgba(0, 210, 255, 0.2)); }
+  50% { opacity: 0.8; filter: drop-shadow(0 0 4px rgba(0, 210, 255, 0.6)); }
+}
+
+.flatline-glow {
+  animation: flatline-pulse 2s infinite ease-in-out;
+}
+
+/* Subtle background particles / floating dot */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) translateX(0px); }
+  50% { transform: translateY(-10px) translateX(5px); }
+}
+
+.float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+/* Scanning glowing sweep for ranking cards */
+@keyframes scan-sweep {
+  0% { top: -100%; }
+  100% { top: 200%; }
+}
+
+.scan-sweep-effect::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  background: linear-gradient(to bottom, transparent, rgba(0, 210, 255, 0.08), transparent);
+  animation: scan-sweep 6s infinite linear;
+  pointer-events: none;
+}
