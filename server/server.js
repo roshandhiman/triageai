@@ -1,8 +1,10 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,12 +16,14 @@ const PORT = 5001;
 app.use(cors());
 app.use(express.json());
 
+// Initialize Google Gemini API
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+
 // Initialize Local JSON Database
 async function initDB() {
   try {
     await fs.access(DB_PATH);
   } catch {
-    // If db.json doesn't exist, initialize it with empty arrays
     const initialData = { patients: [], triagedPatients: [], triageCount: 0 };
     await fs.writeFile(DB_PATH, JSON.stringify(initialData, null, 2));
   }
@@ -37,8 +41,8 @@ async function writeDB(data) {
   await fs.writeFile(DB_PATH, JSON.stringify(data, null, 2));
 }
 
-// Clinical Triage Scoring Rules Engine (Backend version)
-const analyzePatient = (patient) => {
+// Resilient Offline Rules Engine Fallback
+const analyzePatientOffline = (patient) => {
   const complaint = patient.chiefComplaint.toLowerCase();
   let score = 50;
   let reasoning = "";
@@ -118,6 +122,67 @@ const analyzePatient = (patient) => {
   return { score, priority, reasoning, waitTime };
 };
 
+// Google Gemini Live Clinical Triage Call
+async function runGeminiTriage(patient) {
+  if (!process.env.GEMINI_API_KEY) {
+    console.warn("⚠️ Gemini API key is missing. Using resilient offline engine.");
+    return analyzePatientOffline(patient);
+  }
+
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    
+    const prompt = `
+You are acting as an expert Level-1 Trauma Emergency Room Clinical Triage Officer.
+Analyze the following patient clinical presentation and biometric telemetry metrics to determine their emergency priority level.
+
+PATIENT PROFILE:
+- Name: ${patient.name}
+- Age: ${patient.age}
+- Gender: ${patient.gender}
+- Chief Complaint & Symptoms: ${patient.chiefComplaint}
+
+BIOMETRIC TELEMETRY:
+- Blood Pressure: ${patient.bpSys}/${patient.bpDia} mmHg
+- Heart Rate: ${patient.hr} BPM
+- SpO2 (Oxygen Saturation): ${patient.spo2}%
+- Temperature: ${patient.temp}°F
+
+CRITICAL CLINICAL CRITERIA:
+- CRITICAL (Score 90-100, Wait time 0 min): Active STEMI/ACS (crushing chest pain), GCS drop/coma, severe hypoxemia (SpO2 < 88%), hypertensive emergency (BP > 180), active stroke symptoms.
+- SERIOUS (Score 65-89, Wait time 15-30 mins): Moderate dyspnea (asthma/COPD flare-up), fever of >102°F, petechial rash, diabetic hyperglycemia/hypoglycemia with tachypnea, severe trauma with normal vitals.
+- STABLE (Score 15-64, Wait time 45-120 mins): Musculoskeletal sprains, minor lacerations, localized rashes, low-grade fevers without systemic indicators.
+
+You MUST return a JSON object with EXACTLY the following fields:
+1. "score": An integer from 15 to 100 indicating the urgency level.
+2. "priority": Either "CRITICAL", "SERIOUS", or "STABLE".
+3. "reasoning": A professional, high-density 1-2 sentence medical justification detailing exactly why this triage category was chosen, including any key vital sign flags (e.g. tachypnea, hypoxemia, tachycardia).
+4. "waitTime": Recommended wait window (e.g. "0 min (Immediate)", "15 - 30 mins", or "1 - 2 hours").
+
+Return ONLY the raw JSON object. Do not wrap in markdown or backticks.
+`;
+
+    const response = await model.generateContent({
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      generationConfig: { responseMimeType: "application/json" }
+    });
+
+    const text = response.response.text();
+    const result = JSON.parse(text);
+    
+    console.log(`✓ Gemini clinical analysis succeeded for patient: ${patient.name}`);
+    return {
+      score: parseInt(result.score) || 50,
+      priority: result.priority || 'STABLE',
+      reasoning: result.reasoning || 'Diagnostic calculations complete.',
+      waitTime: result.waitTime || '45-60 mins'
+    };
+  } catch (err) {
+    console.error(`⚠️ Gemini API failed for ${patient.name}. Falling back to offline engine:`, err.message);
+    return analyzePatientOffline(patient);
+  }
+}
+
 // Serve Static Frontend Assets from built dist folder
 const distPath = path.join(__dirname, '../dist');
 app.use(express.static(distPath));
@@ -140,7 +205,6 @@ app.post('/api/patients', async (req, res) => {
     const db = await readDB();
     const newPatient = req.body;
     
-    // Check if patient already exists (edit mode)
     const existingIndex = db.patients.findIndex(p => p.id === newPatient.id);
     if (existingIndex !== -1) {
       db.patients[existingIndex] = newPatient;
@@ -148,7 +212,6 @@ app.post('/api/patients', async (req, res) => {
       db.patients.push(newPatient);
     }
     
-    // Reset triaged board so that they must re-triage on update
     db.triagedPatients = [];
     
     await writeDB(db);
@@ -174,7 +237,7 @@ app.delete('/api/patients/:id', async (req, res) => {
   }
 });
 
-// 4. Run triage computations on the backend
+// 4. Run triage computations using real Gemini LLM in parallel!
 app.post('/api/triage', async (req, res) => {
   try {
     const db = await readDB();
@@ -182,14 +245,17 @@ app.post('/api/triage', async (req, res) => {
       return res.status(400).json({ error: "Buffer queue is empty" });
     }
     
-    const results = db.patients.map(p => {
-      const diagnosis = analyzePatient(p);
+    console.log(`🏥 Starting Gemini Live Triage Calculations for ${db.patients.length} patients...`);
+    
+    // Resolve all clinical triages in parallel
+    const results = await Promise.all(db.patients.map(async (p) => {
+      const diagnosis = await runGeminiTriage(p);
       return { 
         ...p, 
         ...diagnosis,
         timestamp: new Date().toLocaleTimeString() 
       };
-    });
+    }));
     
     // Sort by clinical score descending
     results.sort((a, b) => b.score - a.score);
@@ -198,8 +264,10 @@ app.post('/api/triage', async (req, res) => {
     db.triageCount += 1;
     
     await writeDB(db);
+    console.log("✓ Gemini Parallel Live Triage Completed & Database Saved!");
     res.json({ triagedPatients: db.triagedPatients, triageCount: db.triageCount });
   } catch (error) {
+    console.error("Critical server triage error:", error);
     res.status(500).json({ error: "Failed to compile triage metrics" });
   }
 });
@@ -225,5 +293,5 @@ app.get('*', (req, res, next) => {
 
 // Start Server
 app.listen(PORT, () => {
-  console.log(`🏥 Triage AI Clinical Backend running on http://localhost:${PORT}`);
+  console.log(`🏥 Gemini Clinical AI Triage Backend running on http://localhost:${PORT}`);
 });

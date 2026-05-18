@@ -40,6 +40,8 @@ interface Patient {
   timestamp?: string;
 }
 
+const API_URL = 'http://localhost:5001/api';
+
 export default function App() {
   // Application State
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -48,6 +50,11 @@ export default function App() {
   const [analysisStep, setAnalysisStep] = useState(0);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [activeFormIndex, setActiveFormIndex] = useState<number | null>(null);
+
+  // Hybrid Sync Engine States (Stores backend calculations during scan animation)
+  const [backendTriageResults, setBackendTriageResults] = useState<Patient[] | null>(null);
+  const [backendTriageCount, setBackendTriageCount] = useState<number | null>(null);
+  const [backendActive, setBackendActive] = useState(false);
 
   // Form Fields State
   const [formData, setFormData] = useState({
@@ -66,7 +73,7 @@ export default function App() {
   const [systemTime, setSystemTime] = useState(new Date().toLocaleTimeString());
   const [triageCount, setTriageCount] = useState(0);
 
-  // Sound Synthesizer Utility
+  // Web Audio SynthesizerHUD
   const playSound = (type: 'beep' | 'success' | 'alert' | 'click' | 'delete') => {
     if (!audioEnabled) return;
     try {
@@ -77,8 +84,7 @@ export default function App() {
       gain.connect(ctx.destination);
       
       if (type === 'beep') {
-        // High pitch diagnostic double beep
-        osc.frequency.setValueAtTime(987.77, ctx.currentTime); // B5
+        osc.frequency.setValueAtTime(987.77, ctx.currentTime);
         gain.gain.setValueAtTime(0.04, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
         osc.start();
@@ -96,33 +102,29 @@ export default function App() {
           osc2.stop(ctx.currentTime + 0.08);
         }, 120);
       } else if (type === 'success') {
-        // Futuristic success chime
-        osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08); // E5
-        osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.16); // G5
-        osc.frequency.setValueAtTime(1046.50, ctx.currentTime + 0.24); // C6
+        osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08);
+        osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.16);
+        osc.frequency.setValueAtTime(1046.50, ctx.currentTime + 0.24);
         gain.gain.setValueAtTime(0.05, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
         osc.start();
         osc.stop(ctx.currentTime + 0.4);
       } else if (type === 'alert') {
-        // Critical diagnostic alarm sweep
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-        osc.frequency.linearRampToValueAtTime(880, ctx.currentTime + 0.3); // A5
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(880, ctx.currentTime + 0.3);
         gain.gain.setValueAtTime(0.02, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
         osc.start();
         osc.stop(ctx.currentTime + 0.35);
       } else if (type === 'click') {
-        // Subtle cybernetic click
         osc.frequency.setValueAtTime(1500, ctx.currentTime);
         gain.gain.setValueAtTime(0.02, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.03);
         osc.start();
         osc.stop(ctx.currentTime + 0.03);
       } else if (type === 'delete') {
-        // Bass sweep for deletion
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(300, ctx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.2);
@@ -132,16 +134,37 @@ export default function App() {
         osc.stop(ctx.currentTime + 0.25);
       }
     } catch (e) {
-      console.warn("AudioContext block: ", e);
+      console.warn("Audio Context constraint: ", e);
     }
   };
 
-  // Clock Effect
+  // Clock Synchronization Effect
   useEffect(() => {
     const timer = setInterval(() => {
       setSystemTime(new Date().toLocaleTimeString());
     }, 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Hybrid Sync Engine: Initial Data Fetch from Express Database
+  useEffect(() => {
+    const fetchBackendData = async () => {
+      try {
+        const res = await fetch(`${API_URL}/patients`);
+        if (res.ok) {
+          const data = await res.json();
+          setPatients(data.patients || []);
+          setTriagedPatients(data.triagedPatients || []);
+          setTriageCount(data.triageCount || 0);
+          setBackendActive(true);
+          console.log("Connected to Real Triage EMR Backend Server successfully!");
+        }
+      } catch (e) {
+        setBackendActive(false);
+        console.warn("Express backend server offline. Operating in Zero-Latency Local Storage Mode.", e);
+      }
+    };
+    fetchBackendData();
   }, []);
 
   // Loading Steps Sequence
@@ -155,42 +178,51 @@ export default function App() {
     "COMPILE COMPLETED. SYSTOLIC DEVIATIONS SECURED."
   ];
 
+  // AI Telemetry Scan Effect
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (isAnalyzing) {
       setAnalysisStep(0);
-      const stepDuration = 350; // Total 7 steps * 350ms ≈ 2.45s
+      const stepDuration = 350;
       const runStep = (idx: number) => {
         if (idx < analysisLogs.length) {
           setAnalysisStep(idx);
           playSound('beep');
           timer = setTimeout(() => runStep(idx + 1), stepDuration);
         } else {
-          // Finish Analysis
           setIsAnalyzing(false);
-          // Run actual triage calculations
-          const results = patients.map(p => {
-            const tr = analyzePatient(p);
-            return { ...p, ...tr };
-          });
-          // Sort results by score descending
-          results.sort((a, b) => (b.score || 0) - (a.score || 0));
-          setTriagedPatients(results);
-          setTriageCount(prev => prev + 1);
           
-          // Play final notification depending on if there are critical patients
-          const hasCritical = results.some(p => p.priority === 'CRITICAL');
-          if (hasCritical) {
-            playSound('alert');
+          if (backendActive && backendTriageResults) {
+            // Apply backend calculated records
+            setTriagedPatients(backendTriageResults);
+            if (backendTriageCount !== null) {
+              setTriageCount(backendTriageCount);
+            }
+            setBackendTriageResults(null);
+            
+            const hasCritical = backendTriageResults.some(p => p.priority === 'CRITICAL');
+            if (hasCritical) playSound('alert');
+            else playSound('success');
           } else {
-            playSound('success');
+            // Offline fall-back calculations
+            const results = patients.map(p => {
+              const tr = analyzePatient(p);
+              return { ...p, ...tr };
+            });
+            results.sort((a, b) => (b.score || 0) - (a.score || 0));
+            setTriagedPatients(results);
+            setTriageCount(prev => prev + 1);
+            
+            const hasCritical = results.some(p => p.priority === 'CRITICAL');
+            if (hasCritical) playSound('alert');
+            else playSound('success');
           }
         }
       };
       timer = setTimeout(() => runStep(0), 100);
     }
     return () => clearTimeout(timer);
-  }, [isAnalyzing, patients]);
+  }, [isAnalyzing, patients, backendActive, backendTriageResults, backendTriageCount]);
 
   // Demo Patients Array
   const demoPatients: Patient[] = [
@@ -245,23 +277,44 @@ export default function App() {
   ];
 
   // Load Demo Data
-  const handleLoadDemo = () => {
+  const handleLoadDemo = async () => {
     playSound('success');
     setPatients(demoPatients);
-    // Clear triage results initially
     setTriagedPatients([]);
     
-    // Auto-trigger Triage Scan
+    // Attempt to sync demo cases to Express server in the background
+    if (backendActive) {
+      try {
+        await fetch(`${API_URL}/clear`, { method: 'POST' });
+        for (const p of demoPatients) {
+          await fetch(`${API_URL}/patients`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(p)
+          });
+        }
+        
+        // Trigger server-side calculations
+        const res = await fetch(`${API_URL}/triage`, { method: 'POST' });
+        if (res.ok) {
+          const data = await res.json();
+          setBackendTriageResults(data.triagedPatients);
+          setBackendTriageCount(data.triageCount);
+        }
+      } catch (e) {
+        console.warn("Failed to sync demo patients to server.", e);
+      }
+    }
+    
     setIsAnalyzing(true);
   };
 
-  // Diagnostic Triage Logic
+  // Diagnostic Triage Logic (Offline Fallback Engine)
   const analyzePatient = (patient: Patient): Partial<Patient> => {
     const complaint = patient.chiefComplaint.toLowerCase();
     let score = 50;
     let reasoning = "";
     
-    // Core Clinical Indicators
     const hasChestPain = complaint.includes("chest pain") || complaint.includes("heart attack") || complaint.includes("stemi") || complaint.includes("cardiac") || complaint.includes("pressure");
     const hasDyspnea = complaint.includes("breath") || complaint.includes("shortness of breath") || complaint.includes("suffocating") || complaint.includes("dyspnea") || complaint.includes("asthma");
     const hasUnconscious = complaint.includes("unconscious") || complaint.includes("passed out") || complaint.includes("coma") || complaint.includes("semi-conscious") || complaint.includes("unresponsive") || complaint.includes("mental status");
@@ -272,7 +325,6 @@ export default function App() {
     const hasSprain = complaint.includes("sprain") || complaint.includes("twist") || complaint.includes("ankle") || complaint.includes("wrist") || complaint.includes("foot") || complaint.includes("swelling");
     const hasDiabetic = complaint.includes("diabetic") || complaint.includes("sugar") || complaint.includes("insulin") || complaint.includes("dka") || complaint.includes("ketone");
     
-    // Vital Sign Deviations
     const bpSys = patient.bpSys;
     const bpDia = patient.bpDia;
     const hr = patient.hr;
@@ -283,7 +335,6 @@ export default function App() {
     const isSeverelyHypoxic = spo2 < 88;
     const isHypertensiveEmergency = bpSys > 180 || bpDia > 110;
 
-    // Clinical Triage Scoring Grid (1-100)
     if (hasChestPain || hasUnconscious || isSeverelyHypoxic || (hasDyspnea && isHypoxic) || isHypertensiveEmergency || (hasDiabetic && hasUnconscious)) {
       score = 90 + Math.floor(Math.random() * 9);
       if (hasChestPain) {
@@ -323,7 +374,6 @@ export default function App() {
       }
     }
     
-    // Sort Priority Badge & Wait Time
     let priority: 'CRITICAL' | 'SERIOUS' | 'STABLE' = 'STABLE';
     let waitTime = "45-60 mins";
     if (score >= 90) {
@@ -341,11 +391,10 @@ export default function App() {
   };
 
   // Submit Patient Form
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     playSound('click');
 
-    // Validation
     if (!formData.name || !formData.age || !formData.chiefComplaint) {
       alert("Please fill in Name, Age, and Chief Complaint fields.");
       return;
@@ -364,15 +413,28 @@ export default function App() {
       temp: parseFloat(formData.temp) || 98.6
     };
 
+    let updatedPatients = [...patients];
     if (activeFormIndex !== null) {
-      // Edit mode
-      const updated = [...patients];
-      updated[activeFormIndex] = newPatient;
-      setPatients(updated);
+      updatedPatients[activeFormIndex] = newPatient;
       setActiveFormIndex(null);
     } else {
-      // Add mode
-      setPatients(prev => [...prev, newPatient]);
+      updatedPatients.push(newPatient);
+    }
+
+    setPatients(updatedPatients);
+    setTriagedPatients([]);
+
+    // Sync to Express Server
+    if (backendActive) {
+      try {
+        await fetch(`${API_URL}/patients`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newPatient)
+        });
+      } catch (err) {
+        console.warn("Failed to sync patient to server.", err);
+      }
     }
 
     // Reset Form
@@ -387,9 +449,6 @@ export default function App() {
       spo2: '98',
       temp: '98.6'
     });
-
-    // Clear previous triaged board to let them re-trigger
-    setTriagedPatients([]);
   };
 
   // Edit Patient
@@ -411,14 +470,13 @@ export default function App() {
   };
 
   // Delete Patient
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     playSound('delete');
     
-    // Find the element to apply slide-out animation before removal
     const el = document.getElementById(`patient-card-${id}`);
     if (el) {
       el.classList.add('patient-slide-out');
-      setTimeout(() => {
+      setTimeout(async () => {
         setPatients(prev => prev.filter(p => p.id !== id));
         setTriagedPatients(prev => prev.filter(p => p.id !== id));
       }, 300);
@@ -426,15 +484,39 @@ export default function App() {
       setPatients(prev => prev.filter(p => p.id !== id));
       setTriagedPatients(prev => prev.filter(p => p.id !== id));
     }
+
+    // Sync deletion to server
+    if (backendActive) {
+      try {
+        await fetch(`${API_URL}/patients/${id}`, { method: 'DELETE' });
+      } catch (err) {
+        console.warn("Failed to delete patient from server.", err);
+      }
+    }
   };
 
-  // Trigger Live Triage Calculation
-  const handleRunTriage = () => {
+  // Trigger Live Triage
+  const handleRunTriage = async () => {
     if (patients.length === 0) {
       playSound('alert');
       return;
     }
     playSound('click');
+    
+    // Sync calculations to Express server in advance
+    if (backendActive) {
+      try {
+        const res = await fetch(`${API_URL}/triage`, { method: 'POST' });
+        if (res.ok) {
+          const data = await res.json();
+          setBackendTriageResults(data.triagedPatients);
+          setBackendTriageCount(data.triageCount);
+        }
+      } catch (e) {
+        console.warn("Failed to request server-side triage.", e);
+      }
+    }
+    
     setIsAnalyzing(true);
   };
 
@@ -723,10 +805,17 @@ export default function App() {
               </span>
               {patients.length > 0 && (
                 <button
-                  onClick={() => {
+                  onClick={async () => {
                     playSound('delete');
                     setPatients([]);
                     setTriagedPatients([]);
+                    if (backendActive) {
+                      try {
+                        await fetch(`${API_URL}/clear`, { method: 'POST' });
+                      } catch (err) {
+                        console.warn("Failed to clear backend buffer.", err);
+                      }
+                    }
                   }}
                   className="font-mono text-[9px] text-red-400/60 hover:text-red-400 tracking-wider flex items-center gap-1 uppercase transition-colors cursor-pointer"
                 >
@@ -1071,7 +1160,9 @@ export default function App() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#00f5a0]"></span>
             </span>
-            <span className="text-[#00f5a0] tracking-widest font-black uppercase">CORE STATUS: OPERATIONAL</span>
+            <span className="text-[#00f5a0] tracking-widest font-black uppercase">
+              CORE STATUS: {backendActive ? 'EMR DATA LINKED' : 'LOCAL OFFLINE'}
+            </span>
           </div>
 
           <span className="text-cyan-500/20">|</span>
@@ -1085,7 +1176,9 @@ export default function App() {
           <span className="text-cyan-500/20">|</span>
           <span>LATENCY: 2.45s</span>
           <span className="text-cyan-500/20">|</span>
-          <span className="text-cyan-400 font-bold uppercase">DATABASE: SIMULATED (DEMO MODE)</span>
+          <span className={`text-xs font-bold uppercase ${backendActive ? 'text-emerald-400' : 'text-cyan-500/40'}`}>
+            DATABASE: {backendActive ? 'ONLINE Node Express db.json' : 'OFFLINE IN-MEMORY'}
+          </span>
         </div>
 
         {/* Right side live clock */}
