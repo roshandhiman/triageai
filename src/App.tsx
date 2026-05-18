@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Activity, 
   Plus, 
@@ -16,10 +16,7 @@ import {
   Gauge, 
   Wind, 
   Activity as HeartIcon,
-  Search,
   Database,
-  Flame,
-  Shield,
   Layers,
   FileText
 } from 'lucide-react';
@@ -40,6 +37,7 @@ interface Patient {
   priority?: 'CRITICAL' | 'SERIOUS' | 'STABLE';
   reasoning?: string;
   waitTime?: string;
+  timestamp?: string;
 }
 
 export default function App() {
@@ -49,7 +47,7 @@ export default function App() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisStep, setAnalysisStep] = useState(0);
   const [audioEnabled, setAudioEnabled] = useState(false);
-  const [activeFormIndex, setActiveFormIndex] = useState<number | null>(null); // For edit mode
+  const [activeFormIndex, setActiveFormIndex] = useState<number | null>(null);
 
   // Form Fields State
   const [formData, setFormData] = useState({
@@ -283,13 +281,7 @@ export default function App() {
     
     const isHypoxic = spo2 < 92;
     const isSeverelyHypoxic = spo2 < 88;
-    const isTachycardic = hr > 110;
-    const isExtremeTachy = hr > 130;
-    const isBradycardic = hr < 50;
-    const isHypotensive = bpSys < 90;
     const isHypertensiveEmergency = bpSys > 180 || bpDia > 110;
-    const isHighFever = temp >= 102;
-    const isExtremeFever = temp >= 103.5;
 
     // Clinical Triage Scoring Grid (1-100)
     if (hasChestPain || hasUnconscious || isSeverelyHypoxic || (hasDyspnea && isHypoxic) || isHypertensiveEmergency || (hasDiabetic && hasUnconscious)) {
@@ -305,7 +297,7 @@ export default function App() {
       } else {
         reasoning = "Critical neurological and physiological destabilization. Transferred to Resuscitation Bay.";
       }
-    } else if (hasDyspnea || hasStroke || hasBleeding || hasDiabetic || isHighFever || isTachycardic || isHypotensive || (hasFever && hasRash)) {
+    } else if (hasDyspnea || hasStroke || hasBleeding || hasDiabetic || temp >= 102 || hr > 110 || bpSys < 90 || (hasFever && hasRash)) {
       score = 65 + Math.floor(Math.random() * 20);
       if (hasStroke) {
         reasoning = "Active focal neurological deficit matching acute stroke timeline. Quick-track CT scan indicated.";
@@ -336,7 +328,7 @@ export default function App() {
     let waitTime = "45-60 mins";
     if (score >= 90) {
       priority = 'CRITICAL';
-      waitTime = "0 min (Resuscitation)";
+      waitTime = "0 min (Immediate)";
     } else if (score >= 65) {
       priority = 'SERIOUS';
       waitTime = "15 - 30 mins";
@@ -533,7 +525,7 @@ export default function App() {
           <div className="p-5 border-b border-cyan-500/10 shrink-0 select-none">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Plus className="w-4 h-4 text-cyan-400 animate-pulse" />
+                <Plus className="w-4 h-4 text-cyan-400" />
                 <h2 className="font-display font-bold tracking-widest text-sm text-cyan-400 uppercase">
                   {activeFormIndex !== null ? 'EDIT PATIENT PROFILE' : 'ADD NEW PATIENT'}
                 </h2>
@@ -950,6 +942,13 @@ export default function App() {
                   const isCritical = p.priority === 'CRITICAL';
                   const isSerious = p.priority === 'SERIOUS';
                   
+                  // Setup clean variables for vital rendering, avoiding compiler constraints
+                  const bpSys = p.bpSys;
+                  const bpDia = p.bpDia;
+                  const hr = p.hr;
+                  const spo2 = p.spo2;
+                  const temp = p.temp;
+
                   // Card Theme Styling
                   let borderClass = "border-cyan-500/20";
                   let bgGlow = "bg-cyan-500/5";
@@ -957,6 +956,7 @@ export default function App() {
                   let badgePulse = "badge-pulse-stable";
                   let scoreBarColor = "bg-gradient-to-r from-emerald-500 to-[#00f5a0]";
                   let glowTextClass = "glow-text-stable";
+                  let PriorityIcon = CheckCircle2;
 
                   if (isCritical) {
                     borderClass = "pulse-critical border-red-500/40";
@@ -965,6 +965,7 @@ export default function App() {
                     badgePulse = "badge-pulse-critical";
                     scoreBarColor = "bg-gradient-to-r from-red-600 to-[#ff2d55]";
                     glowTextClass = "glow-text-critical";
+                    PriorityIcon = AlertTriangle;
                   } else if (isSerious) {
                     borderClass = "border-amber-500/35 pulse-border-serious";
                     bgGlow = "bg-amber-500/5";
@@ -972,6 +973,7 @@ export default function App() {
                     badgePulse = "badge-pulse-serious";
                     scoreBarColor = "bg-gradient-to-r from-amber-600 to-[#ffb700]";
                     glowTextClass = "glow-text-serious";
+                    PriorityIcon = AlertCircle;
                   }
 
                   return (
@@ -987,7 +989,7 @@ export default function App() {
                       <div className="flex flex-col items-center justify-center shrink-0 w-24 border-r border-cyan-500/10 pr-5">
                         <span className="font-mono text-[10px] text-cyan-500/50 font-bold tracking-widest uppercase">RANK</span>
                         <span className="font-mono font-black text-6xl tracking-tighter text-white/90 leading-none select-none tabular-nums glow-text-cyan mt-1">
-                          0{idx + 1}
+                          {idx + 1 < 10 ? `0${idx + 1}` : idx + 1}
                         </span>
                       </div>
 
@@ -1004,13 +1006,13 @@ export default function App() {
                             <div className="flex items-center gap-1.5 mt-1">
                               <span className="font-mono text-[9px] text-cyan-500/60 uppercase">TELEMETRY SECURED</span>
                               <span className="w-1 h-1 rounded-full bg-cyan-500/40"></span>
-                              <span className="font-mono text-[9px] text-[#00d2ff] uppercase">{p.bpSys}/{p.bpDia} mmHg • {p.hr} BPM</span>
+                              <span className="font-mono text-[9px] text-[#00d2ff] uppercase">{bpSys}/{bpDia} mmHg • {hr} BPM • {spo2}% SpO2 • {temp}°F</span>
                             </div>
                           </div>
 
                           {/* Dynamic Badge */}
                           <div className={`px-2.5 py-1 rounded border font-display text-[9px] font-black tracking-widest uppercase flex items-center gap-1.5 ${badgeColor} ${badgePulse}`}>
-                            <span className="w-1.5 h-1.5 rounded-full bg-current"></span>
+                            <PriorityIcon className="w-3.5 h-3.5 shrink-0" />
                             {p.priority}
                           </div>
                         </div>
@@ -1027,16 +1029,15 @@ export default function App() {
                           <div className="flex-1 flex items-center gap-3">
                             <span className="font-display text-[9px] font-bold text-cyan-500/70 uppercase select-none">URGENCY SCORE:</span>
                             <div className="flex-1 h-2 bg-[#090f23] rounded-full overflow-hidden border border-cyan-500/10 relative">
-                              {/* Trigger transitions inside standard useEffect */}
                               <div 
-                                className={`h-full rounded-full transition-all duration-[1.5s] ease-[cubic-bezier(0.16,1,0.3,1)]`}
+                                className="h-full rounded-full transition-all duration-[1.5s] ease-[cubic-bezier(0.16,1,0.3,1)]"
                                 style={{ width: `${p.score}%` }}
                               >
                                 <div className={`w-full h-full ${scoreBarColor}`}></div>
                               </div>
                             </div>
                             <span className={`font-mono text-sm font-black w-6 text-right tabular-nums ${glowTextClass}`}>
-                              {p.score}
+                              {p.score}%
                             </span>
                           </div>
 
