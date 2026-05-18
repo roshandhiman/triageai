@@ -125,7 +125,7 @@ const analyzePatientOffline = (patient) => {
 // Google Gemini Live Clinical Triage Call
 async function runGeminiTriage(patient) {
   if (!process.env.GEMINI_API_KEY) {
-    console.warn("⚠️ Gemini API key is missing. Using resilient offline engine.");
+    console.warn("[WARN] Gemini API key is missing. Using resilient offline engine.");
     return analyzePatientOffline(patient);
   }
 
@@ -170,7 +170,7 @@ Return ONLY the raw JSON object. Do not wrap in markdown or backticks.
     const text = response.response.text();
     const result = JSON.parse(text);
     
-    console.log(`✓ Gemini clinical analysis succeeded for patient: ${patient.name}`);
+    console.log(`[SUCCESS] Gemini clinical analysis succeeded for patient: ${patient.name}`);
     return {
       score: parseInt(result.score) || 50,
       priority: result.priority || 'STABLE',
@@ -178,7 +178,7 @@ Return ONLY the raw JSON object. Do not wrap in markdown or backticks.
       waitTime: result.waitTime || '45-60 mins'
     };
   } catch (err) {
-    console.error(`⚠️ Gemini API failed for ${patient.name}. Falling back to offline engine:`, err.message);
+    console.error(`[WARN] Gemini API failed for ${patient.name}. Falling back to offline engine:`, err.message);
     return analyzePatientOffline(patient);
   }
 }
@@ -245,7 +245,7 @@ app.post('/api/triage', async (req, res) => {
       return res.status(400).json({ error: "Buffer queue is empty" });
     }
     
-    console.log(`🏥 Starting Gemini Live Triage Calculations for ${db.patients.length} patients...`);
+    console.log(`[INFO] Starting Gemini Live Triage Calculations for ${db.patients.length} patients...`);
     
     // Resolve all clinical triages in parallel
     const results = await Promise.all(db.patients.map(async (p) => {
@@ -264,7 +264,7 @@ app.post('/api/triage', async (req, res) => {
     db.triageCount += 1;
     
     await writeDB(db);
-    console.log("✓ Gemini Parallel Live Triage Completed & Database Saved!");
+    console.log("[SUCCESS] Gemini Parallel Live Triage Completed & Database Saved!");
     res.json({ triagedPatients: db.triagedPatients, triageCount: db.triageCount });
   } catch (error) {
     console.error("Critical server triage error:", error);
@@ -293,5 +293,5 @@ app.get('*', (req, res, next) => {
 
 // Start Server
 app.listen(PORT, () => {
-  console.log(`🏥 Gemini Clinical AI Triage Backend running on http://localhost:${PORT}`);
+  console.log(`[INFO] Gemini Clinical AI Triage Backend running on http://localhost:${PORT}`);
 });
