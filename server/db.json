@@ -1,5 +1,123 @@
 {
-  "patients": [],
-  "triagedPatients": [],
-  "triageCount": 0
+  "patients": [
+    {
+      "id": "1779094920515",
+      "name": "roshan",
+      "age": 18,
+      "gender": "Male",
+      "chiefComplaint": "headache",
+      "bpSys": 120,
+      "bpDia": 80,
+      "hr": 75,
+      "spo2": 98,
+      "temp": 98.6
+    },
+    {
+      "id": "1779094935163",
+      "name": "mathely",
+      "age": 19,
+      "gender": "Male",
+      "chiefComplaint": "cold ",
+      "bpSys": 120,
+      "bpDia": 80,
+      "hr": 74,
+      "spo2": 97,
+      "temp": 96.6
+    },
+    {
+      "id": "1779094963899",
+      "name": "abcd",
+      "age": 54,
+      "gender": "Male",
+      "chiefComplaint": "heart attack",
+      "bpSys": 160,
+      "bpDia": 100,
+      "hr": 95,
+      "spo2": 102,
+      "temp": 100.6
+    },
+    {
+      "id": "1779095123931",
+      "name": "abcd",
+      "age": 2,
+      "gender": "Male",
+      "chiefComplaint": "heart attack ",
+      "bpSys": 120,
+      "bpDia": 80,
+      "hr": 75,
+      "spo2": 98,
+      "temp": 98.6
+    }
+  ],
+  "triagedPatients": [
+    {
+      "id": "1779094963899",
+      "name": "abcd",
+      "age": 54,
+      "gender": "Male",
+      "chiefComplaint": "heart attack",
+      "bpSys": 160,
+      "bpDia": 100,
+      "hr": 95,
+      "spo2": 102,
+      "temp": 100.6,
+      "score": 95,
+      "priority": "CRITICAL",
+      "reasoning": "The patient presents with a chief complaint of 'heart attack,' which is an immediate indicator of a potential Acute Coronary Syndrome (ACS) or STEMI, requiring urgent medical intervention. This directly aligns with the 'Active STEMI/ACS' criteria for CRITICAL priority, despite other vitals like blood pressure (160/100 mmHg) and temperature (100.6°F) not reaching extreme thresholds for hypertensive emergency or severe fever.",
+      "waitTime": "0 min (Immediate)",
+      "timestamp": "2:35:31 PM"
+    },
+    {
+      "id": "1779095123931",
+      "name": "abcd",
+      "age": 2,
+      "gender": "Male",
+      "chiefComplaint": "heart attack ",
+      "bpSys": 120,
+      "bpDia": 80,
+      "hr": 75,
+      "spo2": 98,
+      "temp": 98.6,
+      "score": 95,
+      "priority": "CRITICAL",
+      "reasoning": "A 2-year-old presenting with a chief complaint of \"heart attack\" signifies a potential life-threatening cardiac emergency requiring immediate evaluation, even with currently stable biometric telemetry.",
+      "waitTime": "0 min (Immediate)",
+      "timestamp": "2:35:34 PM"
+    },
+    {
+      "id": "1779094935163",
+      "name": "mathely",
+      "age": 19,
+      "gender": "Male",
+      "chiefComplaint": "cold ",
+      "bpSys": 120,
+      "bpDia": 80,
+      "hr": 74,
+      "spo2": 97,
+      "temp": 96.6,
+      "score": 25,
+      "priority": "STABLE",
+      "reasoning": "The patient presents with a chief complaint of \"cold\" and all biometric telemetry metrics are within normal limits (BP 120/80 mmHg, HR 74 BPM, SpO2 97%, Temp 96.6°F), indicating no immediate life-threatening conditions or signs meeting CRITICAL or SERIOUS criteria.",
+      "waitTime": "1 - 2 hours",
+      "timestamp": "2:35:31 PM"
+    },
+    {
+      "id": "1779094920515",
+      "name": "roshan",
+      "age": 18,
+      "gender": "Male",
+      "chiefComplaint": "headache",
+      "bpSys": 120,
+      "bpDia": 80,
+      "hr": 75,
+      "spo2": 98,
+      "temp": 98.6,
+      "score": 18,
+      "priority": "STABLE",
+      "reasoning": "Normal diagnostic profiles. Triaged to outpatient fast-track clinic queue.",
+      "waitTime": "1 - 2 hours",
+      "timestamp": "2:35:26 PM"
+    }
+  ],
+  "triageCount": 2
 }

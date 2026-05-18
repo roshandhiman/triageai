@@ -628,27 +628,27 @@ export default function App() {
               )}
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {/* Row 1: Name, Age, Gender */}
-              <div className="grid grid-cols-12 gap-3">
+              <div className="grid grid-cols-12 gap-3.5">
                 <div className="col-span-6">
-                  <label className="block font-display text-[9px] font-bold tracking-wider text-cyan-500/60 uppercase mb-1">
+                  <label className="block font-display text-[10px] font-black tracking-widest text-cyan-400 uppercase mb-2">
                     PATIENT NAME
                   </label>
                   <div className="relative">
-                    <User className="absolute left-2.5 top-2 w-3.5 h-3.5 text-cyan-500/40" />
+                    <User className="absolute left-3 top-3.5 w-4.5 h-4.5 text-cyan-400/50" />
                     <input
                       type="text"
                       placeholder="e.g. Arthur Vance"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full bg-[#080d21] border border-cyan-500/20 rounded pl-8 pr-3 py-1.5 font-sans text-sm text-white placeholder-cyan-500/30 input-focus-glow"
+                      className="w-full bg-[#080e24] border border-cyan-500/30 rounded pl-10 pr-4 py-3 font-sans text-base text-white placeholder-cyan-500/25 input-focus-glow"
                     />
                   </div>
                 </div>
 
                 <div className="col-span-3">
-                  <label className="block font-display text-[9px] font-bold tracking-wider text-cyan-500/60 uppercase mb-1">
+                  <label className="block font-display text-[10px] font-black tracking-widest text-cyan-400 uppercase mb-2">
                     AGE
                   </label>
                   <input
@@ -658,18 +658,18 @@ export default function App() {
                     max="125"
                     value={formData.age}
                     onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                    className="w-full bg-[#080d21] border border-cyan-500/20 rounded px-3 py-1.5 font-sans text-sm text-white placeholder-cyan-500/30 input-focus-glow"
+                    className="w-full bg-[#080e24] border border-cyan-500/30 rounded px-4 py-3 font-sans text-base text-white placeholder-cyan-500/25 input-focus-glow"
                   />
                 </div>
 
                 <div className="col-span-3">
-                  <label className="block font-display text-[9px] font-bold tracking-wider text-cyan-500/60 uppercase mb-1">
+                  <label className="block font-display text-[10px] font-black tracking-widest text-cyan-400 uppercase mb-2">
                     GENDER
                   </label>
                   <select
                     value={formData.gender}
                     onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                    className="w-full bg-[#080d21] border border-cyan-500/20 rounded px-2 py-1.5 font-sans text-sm text-white input-focus-glow"
+                    className="w-full bg-[#080e24] border border-cyan-500/30 rounded px-3 py-3 font-sans text-base text-white input-focus-glow cursor-pointer"
                   >
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
@@ -680,34 +680,34 @@ export default function App() {
 
               {/* Row 2: Chief Complaint */}
               <div>
-                <label className="block font-display text-[9px] font-bold tracking-wider text-cyan-500/60 uppercase mb-1">
+                <label className="block font-display text-[10px] font-black tracking-widest text-cyan-400 uppercase mb-2">
                   CHIEF COMPLAINT & SYMPTOM PROFILE
                 </label>
                 <div className="relative">
-                  <FileText className="absolute left-2.5 top-2.5 w-4 h-4 text-cyan-500/40" />
+                  <FileText className="absolute left-3 top-3.5 w-5 h-5 text-cyan-400/50" />
                   <textarea
                     placeholder="Enter detailed presentation (e.g. crushing substernal chest pain radiating to left shoulder, labored breathing...)"
-                    rows={2}
+                    rows={3}
                     value={formData.chiefComplaint}
                     onChange={(e) => setFormData({ ...formData, chiefComplaint: e.target.value })}
-                    className="w-full bg-[#080d21] border border-cyan-500/20 rounded pl-9 pr-3 py-2 font-sans text-sm text-white placeholder-cyan-500/30 input-focus-glow resize-none"
+                    className="w-full bg-[#080e24] border border-cyan-500/30 rounded pl-11 pr-4 py-3 font-sans text-base text-white placeholder-cyan-500/25 input-focus-glow resize-none leading-relaxed"
                   />
                 </div>
               </div>
 
               {/* Row 3: Vital Signs Section */}
-              <div className="border border-cyan-500/10 rounded p-3 bg-[#090f23]/40">
-                <div className="flex items-center gap-1.5 mb-2.5 pb-1.5 border-b border-cyan-500/5">
-                  <HeartIcon className="w-3.5 h-3.5 text-cyan-400" />
-                  <span className="font-display text-[10px] font-bold tracking-wider text-cyan-400 uppercase">
+              <div className="border border-cyan-500/20 rounded p-4 bg-[#090f23]/60 shadow-lg">
+                <div className="flex items-center gap-2 mb-3.5 pb-2.5 border-b border-cyan-500/10">
+                  <HeartIcon className="w-4 h-4 text-cyan-300 animate-pulse-heart" />
+                  <span className="font-display text-xs font-black tracking-wider text-cyan-300 uppercase">
                     BIOMETRIC TELEMETRY (VITALS)
                   </span>
                 </div>
                 
-                <div className="grid grid-cols-4 gap-2.5">
+                <div className="grid grid-cols-4 gap-3">
                   <div>
-                    <label className="block font-display text-[8px] font-bold tracking-wider text-cyan-500/60 uppercase mb-1 flex items-center gap-0.5">
-                      <Gauge className="w-2.5 h-2.5" /> BP (SYS/DIA)
+                    <label className="block font-display text-[10px] font-extrabold tracking-widest text-cyan-400 uppercase mb-1.5 flex items-center gap-0.5">
+                      <Gauge className="w-3 h-3 text-cyan-300" /> BP
                     </label>
                     <div className="flex items-center gap-1">
                       <input
@@ -715,67 +715,67 @@ export default function App() {
                         placeholder="Sys"
                         value={formData.bpSys}
                         onChange={(e) => setFormData({ ...formData, bpSys: e.target.value })}
-                        className="w-1/2 bg-[#080d21] border border-cyan-500/20 rounded text-center py-1 font-mono text-xs text-white placeholder-cyan-500/20 input-focus-glow"
+                        className="w-1/2 bg-[#050917] border border-cyan-500/30 rounded text-center py-2.5 font-mono text-sm font-bold text-white placeholder-cyan-500/40 input-focus-glow"
                       />
-                      <span className="text-cyan-500/40 font-mono text-xs">/</span>
+                      <span className="text-cyan-500/40 font-mono text-sm font-bold">/</span>
                       <input
                         type="text"
                         placeholder="Dia"
                         value={formData.bpDia}
                         onChange={(e) => setFormData({ ...formData, bpDia: e.target.value })}
-                        className="w-1/2 bg-[#080d21] border border-cyan-500/20 rounded text-center py-1 font-mono text-xs text-white placeholder-cyan-500/20 input-focus-glow"
+                        className="w-1/2 bg-[#050917] border border-cyan-500/30 rounded text-center py-2.5 font-mono text-sm font-bold text-white placeholder-cyan-500/40 input-focus-glow"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block font-display text-[8px] font-bold tracking-wider text-cyan-500/60 uppercase mb-1 flex items-center gap-0.5">
-                      <Heart className="w-2.5 h-2.5 text-red-400" /> HR (BPM)
+                    <label className="block font-display text-[10px] font-extrabold tracking-widest text-cyan-400 uppercase mb-1.5 flex items-center gap-0.5">
+                      <Heart className="w-3 h-3 text-red-400" /> HR (BPM)
                     </label>
                     <input
                       type="number"
                       placeholder="BPM"
                       value={formData.hr}
                       onChange={(e) => setFormData({ ...formData, hr: e.target.value })}
-                      className="w-full bg-[#080d21] border border-cyan-500/20 rounded text-center py-1 font-mono text-xs text-white placeholder-cyan-500/20 input-focus-glow"
+                      className="w-full bg-[#050917] border border-cyan-500/30 rounded text-center py-2.5 font-mono text-sm font-bold text-white placeholder-cyan-500/40 input-focus-glow"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-display text-[8px] font-bold tracking-wider text-cyan-500/60 uppercase mb-1 flex items-center gap-0.5">
-                      <Wind className="w-2.5 h-2.5 text-blue-400" /> SpO2 (%)
+                    <label className="block font-display text-[10px] font-extrabold tracking-widest text-cyan-400 uppercase mb-1.5 flex items-center gap-0.5">
+                      <Wind className="w-3 h-3 text-blue-400" /> SpO2 (%)
                     </label>
                     <input
                       type="number"
                       placeholder="%"
                       value={formData.spo2}
                       onChange={(e) => setFormData({ ...formData, spo2: e.target.value })}
-                      className="w-full bg-[#080d21] border border-cyan-500/20 rounded text-center py-1 font-mono text-xs text-white placeholder-cyan-500/20 input-focus-glow"
+                      className="w-full bg-[#050917] border border-cyan-500/30 rounded text-center py-2.5 font-mono text-sm font-bold text-white placeholder-cyan-500/40 input-focus-glow"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-display text-[8px] font-bold tracking-wider text-cyan-500/60 uppercase mb-1 flex items-center gap-0.5">
-                      <Thermometer className="w-2.5 h-2.5 text-amber-400" /> TEMP (°F)
+                    <label className="block font-display text-[10px] font-extrabold tracking-widest text-cyan-400 uppercase mb-1.5 flex items-center gap-0.5">
+                      <Thermometer className="w-3 h-3 text-amber-400" /> TEMP (°F)
                     </label>
                     <input
                       type="text"
                       placeholder="°F"
                       value={formData.temp}
                       onChange={(e) => setFormData({ ...formData, temp: e.target.value })}
-                      className="w-full bg-[#080d21] border border-cyan-500/20 rounded text-center py-1 font-mono text-xs text-white placeholder-cyan-500/20 input-focus-glow"
+                      className="w-full bg-[#050917] border border-cyan-500/30 rounded text-center py-2.5 font-mono text-sm font-bold text-white placeholder-cyan-500/40 input-focus-glow"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Submit Triage Buttons */}
-              <div className="grid grid-cols-12 gap-3">
+              <div className="grid grid-cols-12 gap-3.5 pt-1.5">
                 <button
                   type="submit"
-                  className="col-span-5 py-2 px-3 bg-cyan-600/10 border border-cyan-500/40 text-cyan-400 rounded hover:bg-cyan-500/20 font-display font-bold tracking-widest text-xs uppercase cursor-pointer flex items-center justify-center gap-1.5 transition-all duration-200"
+                  className="col-span-5 py-3.5 px-4 bg-cyan-600/15 border border-cyan-500/50 text-cyan-300 rounded hover:bg-cyan-500/25 font-display font-extrabold tracking-wider text-xs uppercase cursor-pointer flex items-center justify-center gap-2 transition-all duration-200 shadow-md"
                 >
-                  <Plus className="w-3.5 h-3.5" />
+                  <Plus className="w-4 h-4 text-[#00d2ff]" />
                   {activeFormIndex !== null ? 'UPDATE PROFILE' : 'BUFFER PATIENT'}
                 </button>
 
@@ -783,13 +783,13 @@ export default function App() {
                   type="button"
                   onClick={handleRunTriage}
                   disabled={patients.length === 0 || isAnalyzing}
-                  className={`col-span-7 py-2 px-4 rounded text-white font-display font-black tracking-widest text-xs uppercase cursor-pointer flex items-center justify-center gap-2 transition-all duration-300 ${
+                  className={`col-span-7 py-3.5 px-6 rounded text-white font-display font-black tracking-widest text-xs uppercase cursor-pointer flex items-center justify-center gap-2.5 transition-all duration-300 shadow-lg ${
                     patients.length === 0 || isAnalyzing
                       ? 'bg-red-950/20 border border-red-900/30 text-red-500/40 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-red-600 to-[#ff2d55] text-white triage-button-pulse border border-[#ff2d55]/60 hover:from-[#ff2d55] hover:to-red-600'
+                      : 'bg-gradient-to-r from-red-600 to-[#ff2d55] text-white triage-button-pulse border border-[#ff2d55]/70 hover:from-[#ff2d55] hover:to-red-600 shadow-[0_0_15px_rgba(255,45,85,0.4)] hover:shadow-[0_0_25px_rgba(255,45,85,0.6)]'
                   }`}
                 >
-                  <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                  <Sparkles className="w-4 h-4 animate-pulse text-amber-200" />
                   TRIAGE DIAGNOSTIC NOW
                 </button>
               </div>
